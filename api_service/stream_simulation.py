@@ -21,7 +21,13 @@ def load_batch_data():
     # load latest batch file
     df = pd.read_csv(batch_file_path)
     df["datetime_from"] = pd.to_datetime(df["datetime_from"])
+    df["datetime_to"] = pd.to_datetime(df["datetime_to"])
+    df["timestamp_str"] = df["datetime_from"].dt.strftime("%Y%m%d_%H%M") # convert to nicer format for filename
     df.sort_values(by=["datetime_from"], inplace=True)
+
+    # convert to unix for json
+    df["datetime_from"] = df["datetime_from"].astype(int) // 10 ** 9
+    df["datetime_to"] = df["datetime_to"].astype(int) // 10 ** 9
     return df
 
 
@@ -32,10 +38,9 @@ def simulate_stream(df):
     for _, row in df.iterrows():
         sensor_data_directory = "api_service/sensor_data/stream_data"
         os.makedirs(sensor_data_directory, exist_ok=True)
-        timestamp_str = row['datetime_from'].strftime("%Y%m%d_%H%M") # convert to nicer format for filename
-        filename = f"{sensor_data_directory}/sensor_{row['station_id']}_component_{row['component_id']}_{timestamp_str}.csv"
+        filename = f"{sensor_data_directory}/sensor_{row['station_id']}_component_{row['component_id']}_{row['timestamp_str']}.json"
         row_df = pd.DataFrame([row])
-        row_df.to_csv(filename, mode='a', header=not os.path.exists(filename), index=False)
+        row_df.to_json(filename, mode='w', orient='records')
         print(f"Saved: {filename}")
         print("Waiting 10 seconds before processing the next row...") # to do: make counter more readable
         time.sleep(10)

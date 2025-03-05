@@ -105,6 +105,7 @@ def process_batch_data(json_data):
             components_data.append([station_id, datetime_from, datetime_to, component_id, value])
 
     df = pd.DataFrame(components_data, columns=["station_id", "datetime_from", "datetime_to", "component_id", "value"])
+    df["datetime_to"] = df["datetime_to"].str.replace(r"(\d{4}-\d{2}-\d{2}) 24:00:00", r"\1 23:59:59", regex=True)
 
     # save processed data to a .csv file
     save_directory = "api_service/sensor_data/batch_data"
@@ -117,7 +118,7 @@ def process_batch_data(json_data):
     if not os.path.exists(file_path):
         df.to_csv(file_path, index=False)
     else:
-        df.to_csv(file_path, mode='w', header=False, index=False)
+        df.to_csv(file_path, mode='w', index=False)
 
 
 def batch_process():
