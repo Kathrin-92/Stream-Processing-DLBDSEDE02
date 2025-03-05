@@ -1,0 +1,26 @@
+services:
+  postgres:
+    container_name: postgres_db
+    build:
+      context: ./database_service
+      dockerfile: Dockerfile
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: airquality_sensor_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_db:/var/lib/postgresql/data
+      - postgres_db:/usr/src/database_service/db_setup.sql:/docker-entrypoint-initdb.d/db_setup.sql
+    networks:
+      - app_network
+    restart: always
+
+volumes:
+  postgres_db:
+
+networks:
+  app_network:
+    driver: bridge
