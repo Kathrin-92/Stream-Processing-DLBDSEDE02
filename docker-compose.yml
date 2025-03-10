@@ -17,6 +17,21 @@ services:
     networks:
       - app_network
     restart: always
+  spark-streaming:
+    container_name: spark_stream
+    build:
+      context: ./spark_processing
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    ports:
+      - "7077:7077"   # Spark master port
+      - "8080:8080"   # Spark UI port
+      - "4040:4040"   # Job Web UI port
+    volumes:
+      - ./api_service/sensor_data/stream_data:/api_service/sensor_data/stream_data    # Mount a local directory for JSON files
+    networks:
+        - app_network
 
 volumes:
   postgres_db:
