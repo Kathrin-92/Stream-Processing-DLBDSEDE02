@@ -23,3 +23,16 @@ CREATE TABLE IF NOT EXISTS airquality_aggregated (
     max_value FLOAT,
     last_updated TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS airquality_metadata (
+    id INT,
+    code TEXT,
+    symbol TEXT,
+    unit TEXT,
+    name TEXT
+);
+
+COPY airquality_metadata (id, code, symbol, unit, name)
+FROM '/metadata/components_metadata.csv'
+DELIMITER ','
+CSV HEADER;

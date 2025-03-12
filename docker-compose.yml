@@ -14,6 +14,7 @@ services:
     volumes:
       - postgres_db:/var/lib/postgresql/data
       - postgres_db:/usr/src/database_service/db_setup.sql:/docker-entrypoint-initdb.d/db_setup.sql
+      - ./api_service/sensor_data/metadata:/metadata
     networks:
       - app_network
     restart: always
@@ -30,11 +31,15 @@ services:
       - "4040:4040"   # Job Web UI port
     volumes:
       - ./api_service/sensor_data/stream_data:/api_service/sensor_data/stream_data    # Mount a local directory for JSON files
+      - stream-process-logs:/usr/src/spark_processing
     networks:
         - app_network
 
 volumes:
   postgres_db:
+    driver: local
+  stream-process-logs:
+    driver: local
 
 networks:
   app_network:
