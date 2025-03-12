@@ -23,6 +23,10 @@ USER root
 # and give spark user permission for it
 RUN mkdir -p /usr/src/spark_processing && chown -R spark:spark /usr/src/spark_processing
 
+# fetch JDBC driver into Spark's jars directory
+RUN curl -o /opt/spark/jars/postgresql-42.6.0.jar \
+    https://jdbc.postgresql.org/download/postgresql-42.6.0.jar
+
 # set working directory - all operations will operate relative to this directory
 WORKDIR /usr/src/spark_processing
 
