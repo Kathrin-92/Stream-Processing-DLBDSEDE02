@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS airquality_raw (
     station_id INT,
     pollutant_id INT,
     pollutant_name TEXT,
+    pollutant_symbol TEXT,
     unit TEXT,
     value FLOAT,
     timestamp_start TIMESTAMP,
@@ -17,10 +18,11 @@ CREATE TABLE IF NOT EXISTS airquality_raw (
 CREATE TABLE IF NOT EXISTS airquality_aggregated (
     pollutant_id INT,
     pollutant_name TEXT,
+    pollutant_symbol TEXT,
     unit TEXT,
-    avg_value FLOAT,
-    min_value FLOAT,
     max_value FLOAT,
+    min_value FLOAT,
+    avg_value FLOAT,
     last_updated TIMESTAMP
 );
 
