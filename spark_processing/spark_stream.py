@@ -128,11 +128,15 @@ query_raw = df_airquality_raw.writeStream \
         .mode("append") \
         .save()) \
     .start()
-logger.info(f"Step (4): Writing streaming data to airquality_raw PostgreSQL table...")
+logger.info(f"Step (4): Writing streaming data to airquality_raw PostgreSQL table... this is a test, why doesnt it work?!??!")
 
 # ----------------------------------------------------------------------------------------------------------------------
 # AGGREGATED DATA
 # ----------------------------------------------------------------------------------------------------------------------
+
+logging.info("Checking df_airquality_raw BEFORE aggregating:")
+logging.info(f"Schema: {df_airquality_raw.schema.simpleString()}")
+logging.info(f"Execution Plan:\n{df_airquality_raw.explain(extended=True)}")
 
 logger.info(f"Step (5): Start aggregating data...")
 aggregated_data = (df_airquality_raw
@@ -143,8 +147,17 @@ aggregated_data = (df_airquality_raw
         min(col("value")).alias("min_value"),
         avg(col("value")).alias("avg_value"),
 ))
+
+logging.info("🔍 Checking aggregated_data BEFORE adding current timestamp:")
+logging.info(f"Schema: {aggregated_data.schema.simpleString()}")
+logging.info(f"Execution Plan:\n{aggregated_data.explain(extended=True)}")
+
 with_last_updated = aggregated_data.withColumn("last_updated", current_timestamp())
 logger.info(f"... aggregated data successfully.")
+
+logging.info("🔍 Checking with_last_updated BEFORE last select:")
+logging.info(f"Schema: {with_last_updated.schema.simpleString()}")
+logging.info(f"Execution Plan:\n{with_last_updated.explain(extended=True)}")
 
 df_airquality_aggregated = with_last_updated.select (
     col("pollutant_id"),
@@ -157,20 +170,42 @@ df_airquality_aggregated = with_last_updated.select (
     col("last_updated")
 )
 logger.info(f"... selected necessary data columns to write to PostgreSQL.")
-logger.info("test new 18:05")
+
+logging.info("🔍 Checking df_airquality_aggregated BEFORE starting query_agg:")
+logging.info(f"Schema: {df_airquality_aggregated.schema.simpleString()}")
+logging.info(f"Execution Plan:\n{df_airquality_aggregated.explain(extended=True)}")
+logging.info("print this")
 
 # to do: this does not work, always 0 rows in the table
-# query_agg = df_airquality_aggregated.writeStream \
-#     .foreachBatch(lambda batch_df, batch_id: batch_df.write \
-#         .format("jdbc") \
-#         .option("url", "jdbc:postgresql://postgres_db:5432/airquality_sensor_data") \
-#         .option("dbtable", "airquality_aggregated") \
-#         .option("user", "postgres") \
-#         .option("password", "password") \
-#         .option("driver", "org.postgresql.Driver") \
-#         .mode("overwrite") \
-#         .save()) \
-#     .start()
-# logger.info(f"Step (6): Writing aggregated streaming data to airquality_aggregated PostgreSQL table...")
+query_agg = df_airquality_aggregated.writeStream \
+    .foreachBatch(lambda batch_df, batch_id: batch_df.write \
+        .format("jdbc") \
+        .option("url", "jdbc:postgresql://postgres_db:5432/airquality_sensor_data") \
+        .option("dbtable", "airquality_aggregated") \
+        .option("user", "postgres") \
+        .option("password", "password") \
+        .option("driver", "org.postgresql.Driver") \
+        .mode("append") \
+        .save()) \
+    .start()
+logger.info(f"Step (6): Writing aggregated streaming data to airquality_aggregated PostgreSQL table...")
+
+def debug_batch(batch_df, batch_id):
+    logging.info(f"Processing batch {batch_id} with {batch_df.count()} rows")
+    if batch_df.isEmpty():
+        logger.info(f"Batch {batch_id} is empty.")
+    else:
+        logger.info(f"Batch {batch_id} has {batch_df.count()} records.")
+        logging.info(f"Sample data from batch {batch_id}:\n{batch_df.show(5, truncate=False)}")
+
+query_debug = df_airquality_aggregated.writeStream \
+    .foreachBatch(debug_batch) \
+    .start()
+
+logger.info("try debugging")
+
+for q in spark.streams.active:
+    logging.info(f"Query {q.name}: {q.status}")
+    logging.info(f"Last Progress:\n{q.lastProgress}")
 
 spark.streams.awaitAnyTermination()
