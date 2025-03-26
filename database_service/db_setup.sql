@@ -33,8 +33,3 @@ CREATE TABLE IF NOT EXISTS airquality_metadata (
     unit TEXT,
     name TEXT
 );
-
-COPY airquality_metadata (id, code, symbol, unit, name)
-FROM '/metadata/components_metadata.csv'
-DELIMITER ','
-CSV HEADER;

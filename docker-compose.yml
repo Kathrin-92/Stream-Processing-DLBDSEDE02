@@ -1,4 +1,26 @@
+# to do: spark container erst starten, wenn api service läuft? wie kann ich das machen - scheduler irgendwie einbauen
+# to do: cronjob anpassen
+# to do: alle stations einbinden und einmal über den tag durchlaufen lassen
+# to do: fix stream -- stops addings raw data to table but keeps aggregating
+# to do: fix logs for stream simulation - deletion of files not correctly written down
+
 services:
+  api_service:
+    container_name: api_service_container
+    build:
+      context: ./api_service
+      dockerfile: Dockerfile
+    volumes:
+      - ./api_service/sensor_data/batch_data:/usr/src/api_service/sensor_data/batch_data
+      - ./api_service/sensor_data/metadata:/usr/src/api_service/sensor_data/metadata
+      - ./api_service/sensor_data/stream_data:/usr/src/api_service/sensor_data/stream_data
+      - api-service-logs:/usr/src/api_service
+    networks:
+      - app_network
+    restart: on-failure
+    depends_on:
+      - postgres
+
   postgres:
     container_name: postgres_db
     build:
@@ -14,10 +36,10 @@ services:
     volumes:
       - postgres_db:/var/lib/postgresql/data
       - postgres_db:/usr/src/database_service/db_setup.sql:/docker-entrypoint-initdb.d/db_setup.sql
-      - ./api_service/sensor_data/metadata:/metadata
     networks:
       - app_network
     restart: always
+
   spark-streaming:
     container_name: spark_stream
     build:
@@ -25,20 +47,24 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - postgres
+      - api_service
     ports:
       - "7077:7077"   # Spark master port
       - "8080:8080"   # Spark UI port
       - "4040:4040"   # Job Web UI port
     volumes:
-      - ./api_service/sensor_data/stream_data:/api_service/sensor_data/stream_data    # Mount a local directory for JSON files
+      - ./api_service/sensor_data/stream_data:/api_service/sensor_data/stream_data
       - stream-process-logs:/usr/src/spark_processing
     networks:
         - app_network
+    restart: always
 
 volumes:
   postgres_db:
     driver: local
   stream-process-logs:
+    driver: local
+  api-service-logs:
     driver: local
 
 networks:
