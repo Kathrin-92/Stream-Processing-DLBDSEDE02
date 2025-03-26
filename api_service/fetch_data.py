@@ -117,7 +117,7 @@ def process_batch_data(json_data):
     if not os.path.exists(file_path):
         df.to_csv(file_path, index=False)
     else:
-        df.to_csv(file_path, mode='w', index=False)
+        df.to_csv(file_path, mode='a', index=False, header=False)
 
 
 def batch_process():
@@ -149,7 +149,7 @@ def batch_process():
     print(f"---- START FETCHING SENSOR DATA FOR DIFFERENT STATIONS ---- ")
 
     station_id_list = [
-        "DEHH082" #, "DEHH068", "DEHH008", "DEHH064"
+        "DEHH082" , "DEHH068", "DEHH008", "DEHH064"
         # , "DEHH015", "DEHH081", "DEHH026", "DEHH070", "DEHH079", "DENI063",
         # "DESH022", "DESH056", "DESH057", "DESH008", "DESH015", "DESH053", "DESH027", "DESH023", "DESH058", "DENW134",
         # "DENW021", "DENW024", "DENW208", "DENW112", "DENW043", "DENW188", "DENW071", "DEBE051", "DEBE010", "DEBE032",
