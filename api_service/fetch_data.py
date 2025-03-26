@@ -5,6 +5,9 @@ import requests
 import pandas as pd
 from datetime import timedelta, date
 import os
+import logging
+
+logger = logging.getLogger('main')
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -19,13 +22,13 @@ def fetch_components_metadata(language_parameter, index_parameter, api_url_compo
     The function does not return a value but saves the metadata to a CSV file.
     """
 
-    save_directory = "api_service/sensor_data/metadata"
+    save_directory = "/usr/src/api_service/sensor_data/metadata"
     file_name = "components_metadata.csv"
     file_path = os.path.join(save_directory, file_name)
     os.makedirs(save_directory, exist_ok=True)
 
     if os.path.exists(file_path):
-        print("Metadata file already exists. No API call needed.")
+        logger.info("Metadata file already exists. No API call needed.")
         return
 
     else:
@@ -44,9 +47,9 @@ def fetch_components_metadata(language_parameter, index_parameter, api_url_compo
                                     orient="index",
                                     columns=["id", "code", "symbol", "unit", "name"])
             extracted_metadata.to_csv(file_path, index=False)
-            print("Metadata successfully saved.")
+            logger.info("Metadata successfully saved.")
         else:
-            print(f"Error fetching metadata: {response_components.status_code}, {response_components.text}")
+            logger.info(f"Error fetching metadata: {response_components.status_code}, {response_components.text}")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -73,7 +76,7 @@ def fetch_data(station_id, date_from, time_from, date_to, time_to, headers_data,
     if response.status_code == 200:
         return response.json()
     else:
-        print(f"Error fetching data for station {station_id}: {response.status_code}")
+        logger.info(f"Error fetching data for station {station_id}: {response.status_code}")
         return None
 
 
@@ -107,7 +110,7 @@ def process_batch_data(json_data):
     df["datetime_to"] = df["datetime_to"].str.replace(r"(\d{4}-\d{2}-\d{2}) 24:00:00", r"\1 23:59:59", regex=True)
 
     # save processed data to a .csv file
-    save_directory = "api_service/sensor_data/batch_data"
+    save_directory = "/usr/src/api_service/sensor_data/batch_data"
     date_obj = date.today() - timedelta(days=1)
     date_str = date_obj.strftime("%Y%m%d")
     file_name = f"batch_data_{date_str}.csv"
@@ -135,7 +138,7 @@ def batch_process():
     headers_data = {"accept": "application/json"}
 
     #### metadata ####
-    print(f"---- START FETCHING METADATA ON COMPONENTS ---- ")
+    logger.info("---- START FETCHING METADATA ON COMPONENTS ---- ")
 
     # set parameters for metadata api call
     api_url_components = "https://www.umweltbundesamt.de/api/air_data/v3/components/json"
@@ -146,10 +149,10 @@ def batch_process():
     fetch_components_metadata(language_parameter, index_parameter, api_url_components, headers_data)
 
     #### sensor data ####
-    print(f"---- START FETCHING SENSOR DATA FOR DIFFERENT STATIONS ---- ")
+    logger.info("---- START FETCHING SENSOR DATA FOR DIFFERENT STATIONS ---- ")
 
     station_id_list = [
-        "DEHH082" , "DEHH068", "DEHH008", "DEHH064"
+        "DEHH082" #, "DEHH068", "DEHH008", "DEHH064"
         # , "DEHH015", "DEHH081", "DEHH026", "DEHH070", "DEHH079", "DENI063",
         # "DESH022", "DESH056", "DESH057", "DESH008", "DESH015", "DESH053", "DESH027", "DESH023", "DESH058", "DENW134",
         # "DENW021", "DENW024", "DENW208", "DENW112", "DENW043", "DENW188", "DENW071", "DEBE051", "DEBE010", "DEBE032",
@@ -167,7 +170,7 @@ def batch_process():
         date_to = date_from
         time_to = 24
 
-        print(f"Fetching data for station: {station_id}")
+        logger.info(f"Fetching data for station: {station_id}")
         json_data = fetch_data(station_id, date_from, time_from, date_to, time_to, headers_data, api_url)
 
         if json_data:

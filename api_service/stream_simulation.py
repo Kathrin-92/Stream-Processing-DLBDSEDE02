@@ -5,6 +5,9 @@ import pandas as pd
 import time
 from datetime import timedelta, date
 import os
+import logging
+
+logger = logging.getLogger('main')
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -17,7 +20,7 @@ def load_batch_data():
         Performs some date transformations for readability.
         Returns: df of batch file
     """
-    batch_directory = "api_service/sensor_data/batch_data"
+    batch_directory = "/usr/src/api_service/sensor_data/batch_data"
     date_obj = date.today() - timedelta(days=1)
     date_str = date_obj.strftime("%Y%m%d")
     file_name = f"batch_data_{date_str}.csv"
@@ -42,16 +45,16 @@ def simulate_stream(df):
         Waits 10 seconds before processing the next row.
     """
     if df is None or df.empty:
-        print("No data to process.")
+        logger.info("No data to process.")
         return
     for _, row in df.iterrows():
-        sensor_data_directory = "api_service/sensor_data/stream_data"
+        sensor_data_directory = "/usr/src/api_service/sensor_data/stream_data"
         os.makedirs(sensor_data_directory, exist_ok=True)
         filename = f"{sensor_data_directory}/sensor_{row['station_id']}_component_{row['component_id']}_{row['timestamp_str']}.json"
         row_df = pd.DataFrame([row])
         row_df.to_json(filename, mode='w', orient='records')
-        print(f"Saved: {filename}")
-        print("Waiting 10 seconds before processing the next row...") # to do: make counter more readable
+        logger.info(f"Saved: {filename}")
+        logger.info("Waiting 10 seconds before processing the next row...") # to do: make counter more readable
         time.sleep(10)
 
 
@@ -59,7 +62,7 @@ def delete_old_files():
     """
         Function for deleting old files from directory after 6 Minutes (360 seconds).
     """
-    sensor_data_directory = "api_service/sensor_data/stream_data"
+    sensor_data_directory = "/usr/src/api_service/sensor_data/stream_data"
     os.makedirs(sensor_data_directory, exist_ok=True)
     current_time = time.time()
 
@@ -68,7 +71,7 @@ def delete_old_files():
             file_location = os.path.join(dirpath, f)
             file_time = os.stat(file_location).st_mtime
             if file_time < current_time - 360:
-                print(f" Deleting file : {file_location}")
+                logger.info(f" Deleting file : {file_location}")
                 os.remove(file_location)
 
 
