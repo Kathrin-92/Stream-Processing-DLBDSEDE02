@@ -7,6 +7,7 @@ from pyspark.sql.types import StructField, StructType, StringType, IntegerType, 
 import logging
 import os
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 # SET UP CONTAINER-SPECIFIC LOGGING
 # ----------------------------------------------------------------------------------------------------------------------
@@ -22,6 +23,7 @@ file_handler = logging.FileHandler(log_filename)
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger.addHandler(file_handler)
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # SETUP SPARK SESSION
@@ -53,6 +55,7 @@ schema_str = str(df.schema)
 logger.info(f"... ✅ Connection to PostgreSQL successfull! Spark read table schema from airquality_raw.")
 logger.info(f"... Print table schema: {schema_str}")
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 # READ METADATA
 # ----------------------------------------------------------------------------------------------------------------------
@@ -69,6 +72,7 @@ airquality_metadata = spark.read \
 metadata_schema_str = str(airquality_metadata.schema)
 logger.info(f"... ✅ Connection to PostgreSQL successfull! Spark read meatadata info on airquality data.")
 logger.info(f"... Print metadata table schema: {metadata_schema_str}")
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # HISTORICAL RECORD
@@ -173,7 +177,7 @@ query_agg = df_airquality_aggregated.writeStream \
     .foreachBatch(lambda batch_df, batch_id: (
         logger.info(f"... (AGG) Processing batch {batch_id} with {batch_df.count()} rows."),
 
-        # maybe add custom merge logic here to only update aggregates and last_updated column
+        # for further development: add custom merge logic here to only update aggregates and last_updated column
 
         batch_df.write \
         .format("jdbc") \
@@ -189,8 +193,6 @@ query_agg = df_airquality_aggregated.writeStream \
 logger.info(f"Step (6️⃣): (AGG) Start query_agg. Writing aggregated streaming data to airquality_aggregated PostgreSQL table...")
 
 spark.streams.awaitAnyTermination()
-
-# to do: build logic to delete files that have been processed by agg after the five minutes retention time window
 
 # for debugging
 # for q in spark.streams.active:
