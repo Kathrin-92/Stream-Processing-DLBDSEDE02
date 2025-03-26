@@ -77,7 +77,6 @@ def fetch_data(station_id, date_from, time_from, date_to, time_to, headers_data,
         return None
 
 
-## Function to process sensor json data and retrieve only necessary information.
 def process_batch_data(json_data):
     """
     Processes sensor JSON data and retrieves only necessary information.
