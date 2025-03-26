@@ -6,12 +6,13 @@ import pandas as pd
 from datetime import timedelta, date
 import os
 import logging
+from sqlalchemy import create_engine
 
 logger = logging.getLogger('main')
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FUNCTION FOR METADATA
+# FUNCTIONS FOR METADATA
 # ----------------------------------------------------------------------------------------------------------------------
 
 def fetch_components_metadata(language_parameter, index_parameter, api_url_components, header):
@@ -47,9 +48,22 @@ def fetch_components_metadata(language_parameter, index_parameter, api_url_compo
                                     orient="index",
                                     columns=["id", "code", "symbol", "unit", "name"])
             extracted_metadata.to_csv(file_path, index=False)
-            logger.info("Metadata successfully saved.")
+            logger.info("Metadata successfully saved to .csv file.")
         else:
             logger.info(f"Error fetching metadata: {response_components.status_code}, {response_components.text}")
+
+
+def save_metadata():
+    """
+        Saves Metadata informaiton into PostgreSQL airquality_metadata table from .csv file.
+    """
+    file_path = "/usr/src/api_service/sensor_data/metadata/components_metadata.csv"
+    df = pd.read_csv(file_path)
+    logger.info("Read saved metadata csv-file.")
+    db_url = 'postgresql+psycopg2://postgres:password@postgres_db/airquality_sensor_data'
+    engine = create_engine(db_url)
+    df.to_sql('airquality_metadata', engine, if_exists='append', index=False)
+    logger.info("Wrote metadata to PostgreSQL table.")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -147,6 +161,9 @@ def batch_process():
 
     # perform api call
     fetch_components_metadata(language_parameter, index_parameter, api_url_components, headers_data)
+
+    # save metadata to postgres
+    save_metadata()
 
     #### sensor data ####
     logger.info("---- START FETCHING SENSOR DATA FOR DIFFERENT STATIONS ---- ")
