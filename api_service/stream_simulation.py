@@ -44,6 +44,9 @@ def simulate_stream(df):
         Simulates a stream of data by reading the df of batch data row by row and saving each row as its own file.
         Waits 10 seconds before processing the next row.
     """
+
+    counter = 0
+
     if df is None or df.empty:
         logger.info("No data to process.")
         return
@@ -53,9 +56,11 @@ def simulate_stream(df):
         filename = f"{sensor_data_directory}/sensor_{row['station_id']}_component_{row['component_id']}_{row['timestamp_str']}.json"
         row_df = pd.DataFrame([row])
         row_df.to_json(filename, mode='w', orient='records')
-        logger.info(f"Saved: {filename}")
-        logger.info("Waiting 10 seconds before processing the next row...") # to do: make counter more readable
-        time.sleep(10)
+        # logger.info(f"Saved: {filename}")
+        counter += 1
+        logger.info(f"Processed {counter} rows.")
+        # logger.info("Waiting 28 seconds before processing the next row...")
+        time.sleep(28)
 
 
 def delete_old_files():

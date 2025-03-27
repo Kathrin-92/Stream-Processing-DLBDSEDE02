@@ -56,9 +56,9 @@ services:
       postgres:
         condition: service_started
     ports:
-      - "7077:7077"   # Spark master port
-      - "8080:8080"   # Spark UI port
-      - "4040:4040"   # Job Web UI port
+      - "7077:7077"   # spark master port
+      - "8080:8080"   # spark UI port
+      - "4040:4040"   # job web UI port
     volumes:
       - ./api_service/sensor_data/stream_data:/api_service/sensor_data/stream_data
       - stream-process-logs:/usr/src/spark_processing
