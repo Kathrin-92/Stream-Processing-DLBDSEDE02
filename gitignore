@@ -1,0 +1,8 @@
+.idea/
+.idea/workspace.xml
+.DS_Store
+**/.DS_Store
+*.pyc
+__pycache__/
+.env
+*.log

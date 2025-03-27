@@ -1,9 +1,3 @@
-# to do: spark container erst starten, wenn api service läuft? wie kann ich das machen - scheduler irgendwie einbauen
-# to do: cronjob anpassen
-# to do: alle stations einbinden und einmal über den tag durchlaufen lassen
-# to do: fix stream -- stops addings raw data to table but keeps aggregating
-# to do: fix logs for stream simulation - deletion of files not correctly written down
-
 services:
   api_service:
     container_name: api_service_container
@@ -20,6 +14,17 @@ services:
     restart: on-failure
     depends_on:
       - postgres
+    # adjust health endpoint as needed or trigger spark_stream container manually
+    # use health check endpoint to ensure api_service is running (based on your crontab configurations) before starting the stream job
+    # if you prefer manual control, wait until api_service is ready and start the stream job manually
+    # The stream job can start before api_service is simulating data stream, however, this may waste resources
+    # if the job runs without incoming data.
+    healthcheck:
+      test: ["CMD", "pgrep", "python"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 15m # adjust according to your crontab configurations
 
   postgres:
     container_name: postgres_db
@@ -46,8 +51,10 @@ services:
       context: ./spark_processing
       dockerfile: Dockerfile
     depends_on:
-      - postgres
-      - api_service
+      api_service:
+          condition: service_healthy
+      postgres:
+        condition: service_started
     ports:
       - "7077:7077"   # Spark master port
       - "8080:8080"   # Spark UI port
