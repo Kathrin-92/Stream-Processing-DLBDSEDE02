@@ -1,2 +1,4 @@
 # Run the main.py script
-*/2 * * * * /usr/local/bin/python /usr/src/api_service/main.py >> /proc/1/fd/1 2>> /proc/1/fd/2
+# The default execution time for the crontab job is 14:30 PM.
+# If needed, set a suitable execution time based on when your container is running.
+30 14 * * * /usr/local/bin/python /usr/src/api_service/main.py >> /proc/1/fd/1 2>> /proc/1/fd/2

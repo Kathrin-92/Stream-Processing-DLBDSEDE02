@@ -128,7 +128,7 @@ logger.info(f"... ✅ (RAW) selected necessary data columns to write to PostgreS
 # AGGREGATED DATA
 # ----------------------------------------------------------------------------------------------------------------------
 
-logger.info(f"Step (4️⃣): Start aggregating data with adjusted window...")
+logger.info(f"Step (4️⃣): Start aggregating data...")
 aggregated_data = (df_airquality_raw
     .withWatermark("ingestion_timestamp", "5 minutes")
     .groupBy("pollutant_id", "pollutant_name", "pollutant_symbol", "unit")
@@ -159,7 +159,9 @@ logger.info(f"... ✅ (AGG) selected necessary data columns to write to PostgreS
 
 query_raw = df_airquality_raw.writeStream \
     .outputMode("append") \
-    .foreachBatch(lambda batch_df, batch_id: batch_df.write \
+    .foreachBatch(lambda batch_df, batch_id: (
+        logger.info(f"... (RAW) Processing batch {batch_id} with {batch_df.count()} rows."),
+        batch_df.write \
         .format("jdbc") \
         .option("url", "jdbc:postgresql://postgres_db:5432/airquality_sensor_data") \
         .option("dbtable", "airquality_raw") \
@@ -167,7 +169,7 @@ query_raw = df_airquality_raw.writeStream \
         .option("password", "password") \
         .option("driver", "org.postgresql.Driver") \
         .mode("append") \
-        .save()) \
+        .save())) \
     .option("checkpointLocation", "/usr/src/spark_processing/checkpoint/raw") \
     .start()
 logger.info(f"Step (5️⃣): (RAW) Start query_raw. Writing streaming data to airquality_raw PostgreSQL table...")
