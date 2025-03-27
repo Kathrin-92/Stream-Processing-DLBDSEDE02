@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS airquality_raw (
 );
 
 -- will contain aggregated sensor data
--- will be update-mode table, meaning it will be overwritten as soon as new data are available
 CREATE TABLE IF NOT EXISTS airquality_aggregated (
     pollutant_id INT,
     pollutant_name TEXT,
